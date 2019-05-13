@@ -101,7 +101,13 @@ class Transform(object):
             # Assume we really do have an image.
             return self.image_function(tensor, **transform_function_kwargs)
         else:
-            raise NotImplementedError
+            msg = f"{type(tensor)} "
+            try:
+                msg += str(tensor.ndim)
+            except Exception:
+                pass
+
+            raise NotImplementedError(msg)
 
     # noinspection PyUnresolvedReferences
     def _apply_volume_function(self, tensor, **transform_function_kwargs):
