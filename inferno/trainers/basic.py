@@ -805,6 +805,9 @@ class Trainer(object):
         Trainer
             self
         """
+        if "dummy_input" in kwargs and "model" not in kwargs:
+            kwargs["model"] = self.model
+
         if isinstance(logger, Logger):
             # Set logger and register with the callback engine.
             self._logger = logger

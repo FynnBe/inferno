@@ -1,7 +1,10 @@
 import tensorboardX as tX
 import numpy as np
+import torch.nn
 import warnings
-from scipy.misc import toimage
+
+from typing import Optional
+
 from .base import Logger
 from ....utils import torch_utils as tu
 from ....utils import python_utils as pyu
@@ -27,7 +30,7 @@ class TensorboardLogger(Logger):
     def __init__(self, log_directory=None,
                  log_scalars_every=None, log_images_every=None, log_histograms_every=None,
                  send_image_at_batch_indices='all', send_image_at_channel_indices='all',
-                 send_volume_at_z_indices='mid'):
+                 send_volume_at_z_indices='mid', model: Optional[torch.nn.Module] = None, dummy_input: Optional[torch.Tensor] = None):
         """
         Parameters
         ----------
@@ -80,6 +83,12 @@ class TensorboardLogger(Logger):
             self.log_images_every = log_images_every
         if log_histograms_every is not None:
             self.log_histograms_every = log_histograms_every
+
+        if model is not None:
+            if dummy_input is None:
+                warnings.warn("to add a model graph to TensorboardLogger 'dummy_input' is required!")
+            else:
+                self.add_graph(model, dummy_input)
 
     @property
     def writer(self):
@@ -140,6 +149,9 @@ class TensorboardLogger(Logger):
         return self.log_histograms_every.match(iteration_count=self.trainer.iteration_count,
                                                epoch_count=self.trainer.epoch_count,
                                                persistent=True)
+
+    def add_graph(self, model: torch.nn.Module, dummy_input: torch.Tensor):
+        self.writer.add_graph(model, dummy_input, verbose=True)
 
     def observe_state(self, key, observe_while='training'):
         # Validate arguments
