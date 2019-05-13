@@ -1,5 +1,6 @@
 from datetime import datetime
 from inspect import signature
+import numpy
 import os
 import shutil
 import contextlib
@@ -1433,7 +1434,11 @@ class Trainer(object):
                 self._last_metric_evaluated_at_epoch = self._epoch_count
                 error = self.metric(thu.unwrap(prediction, to_cpu=False),
                                     thu.unwrap(target, to_cpu=False))
-                self.update_state('training_error', thu.unwrap(error))
+                training_error = thu.unwrap(error)
+                if isinstance(training_error, numpy.ndarray):
+                    training_error = list(training_error)
+
+                self.update_state('training_error', training_error)
             else:
                 error = None
             # Update state from computation
@@ -1558,7 +1563,12 @@ class Trainer(object):
                 if torch.is_tensor(validation_error):
                     # Convert to float
                     validation_error = thu.unwrap(validation_error, extract_item=True)
-                self.update_state('validation_error', thu.unwrap(validation_error))
+
+                validation_error_state = thu.unwrap(validation_error)
+                if isinstance(validation_error_state, numpy.ndarray):
+                    validation_error_state = list(validation_error_state)
+
+                self.update_state('validation_error', validation_error_state)
                 validation_error_meter.update(validation_error, n=batch_size)
 
             self.update_state('validation_inputs', thu.unwrap(inputs))
@@ -1593,6 +1603,15 @@ class Trainer(object):
                             validation_error_meter if self.metric_is_defined else None)
         return self
 
+    def validation_score_lt(self, score1, score2):
+        if hasattr(score1, "__iter__"):
+            score1 = score1[0]
+
+        if hasattr(score2, "__iter__"):
+            score2 = score2[0]
+
+        return score1 < score2
+
     def record_validation_results(self, validation_loss, validation_error):
         # Update state
         self.update_state('validation_loss_averaged', thu.unwrap(validation_loss))
@@ -1602,7 +1621,7 @@ class Trainer(object):
         # validation error should either always not be None, or otherwise.
         validation_score = validation_loss if validation_error is None else validation_error
         # Check if validation error is less than the best so far
-        if self._best_validation_score is None or validation_score < self._best_validation_score:
+        if self._best_validation_score is None or self.validation_score_lt(validation_score, self._best_validation_score):
             # Best score so far. The following flag will trigger a save
             self._is_iteration_with_best_validation_score = True
             self._best_validation_score = validation_score
