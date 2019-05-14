@@ -18,6 +18,9 @@ from numpy import inf
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torch.nn.parallel.data_parallel import data_parallel
+
+from typing import Optional
+
 from .callbacks.logging.base import Logger
 from .callbacks.logging import get_logger
 
@@ -124,6 +127,8 @@ class Trainer(object):
         self._max_num_epochs = None
 
         # Callbacks and states
+        self.compute_training_residuals: bool = False
+        self.compute_validation_residuals: bool = False
         self._callback_engine = CallbackEngine().bind_trainer(self)
         self._state = {}
 
@@ -585,7 +590,7 @@ class Trainer(object):
         self._loaders.update({'validate': value})
 
     @property
-    def logger(self):
+    def logger(self) -> Optional[Logger]:
         """Gets the logger."""
         return self._logger
 
@@ -1445,6 +1450,11 @@ class Trainer(object):
             else:
                 error = None
             # Update state from computation
+            no_grad = torch.no_grad if hasattr(torch, 'no_grad') else contextlib.suppress
+            with no_grad():
+                if self.compute_training_residuals:
+                    self.update_state("training_residuals", thu.unwrap(torch.abs(prediction - target)))
+
             self.update_state('training_inputs', thu.unwrap(inputs))
             self.update_state('training_target', thu.unwrap(target))
             self.update_state('training_prediction', thu.unwrap(prediction))
@@ -1573,6 +1583,10 @@ class Trainer(object):
 
                 self.update_state('validation_error', validation_error_state)
                 validation_error_meter.update(validation_error, n=batch_size)
+
+            with no_grad():
+                if self.compute_validation_residuals:
+                    self.update_state('validation_residuals', thu.unwrap(torch.abs(output - target)))
 
             self.update_state('validation_inputs', thu.unwrap(inputs))
             self.update_state('validation_target', thu.unwrap(target))

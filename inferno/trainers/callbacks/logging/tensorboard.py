@@ -167,6 +167,12 @@ class TensorboardLogger(Logger):
         assert_(isinstance(key, str),
                 "State key must be a string, got {} instead.".format(type(key).__name__),
                 TypeError)
+
+        if key == "training_residuals":
+            self.trainer.compute_training_residuals = True
+        elif key == "validation_residuals":
+            self.trainer.compute_validation_residuals = True
+
         # Add to set of observed states
         if observe_while == 'training':
             self._trainer_states_being_observed_while_training.add(key)
@@ -177,6 +183,11 @@ class TensorboardLogger(Logger):
         return self
 
     def unobserve_state(self, key, observe_while='training'):
+        if key == "training_residuals":
+            self.trainer.compute_training_residuals = False
+        elif key == "validation_residuals":
+            self.trainer.compute_validation_residuals = False
+
         if observe_while == 'training':
             self._trainer_states_being_observed_while_training.remove(key)
         elif observe_while == 'validating':
