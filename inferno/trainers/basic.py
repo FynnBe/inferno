@@ -1584,8 +1584,8 @@ class Trainer(object):
                 self.update_state('validation_error', validation_error_state)
                 validation_error_meter.update(validation_error, n=batch_size)
 
-            with no_grad():
-                if self.compute_validation_residuals:
+            if self.compute_validation_residuals:
+                with no_grad():
                     self.update_state('validation_residuals', thu.unwrap(torch.abs(output - target)))
 
             self.update_state('validation_inputs', thu.unwrap(inputs))

@@ -291,7 +291,7 @@ class ConvReLU3D(ConvActivation):
                                          initialization=KaimingNormalWeightsZeroBias())
 
 
-class ValidConvReLU3D(ConvActivation):
+class ValidConvReLU3D(ValidConvActivation):
     """3D Convolutional layer with 'VALID' padding, ReLU and Kaiming normal weight initialization."""
     def __init__(self, in_channels, out_channels, kernel_size):
         super().__init__(
