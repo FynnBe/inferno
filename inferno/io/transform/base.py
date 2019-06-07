@@ -1,6 +1,8 @@
 from ...utils import python_utils as pyu
 import numpy as np
 
+from typing import Callable
+
 
 class Transform(object):
     """
@@ -136,7 +138,7 @@ class Transform(object):
 
 class Compose(object):
     """Composes multiple callables (including but not limited to `Transform` objects)."""
-    def __init__(self, *transforms):
+    def __init__(self, *transforms: Callable):
         """
         Parameters
         ----------
