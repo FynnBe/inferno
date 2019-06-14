@@ -438,7 +438,7 @@ class TensorboardLogger(Logger):
     def log_histogram(self, tag, values, step, bins=1000):
         """Logs the histogram of a list/vector of values."""
         # TODO
-        raise NotImplementedError
+        self.writer.add_histogram(tag=tag, values=values, global_step=step)
 
     def get_config(self):
         # Apparently, some SwigPyObject objects cannot be pickled - so we need to build the
