@@ -119,6 +119,12 @@ class ConvActivation(nn.Module):
         return tuple(padding)
 
 
+class ValidConvActivation(ConvActivation):
+    """Convolutional layer with 'VALID' padding followed by an activation."""
+    def _get_padding(self, _kernel_size, _dilation):
+        return 0
+
+
 class ConvELU2D(ConvActivation):
     """2D Convolutional layer with 'SAME' padding, ELU and orthogonal weight initialization."""
     def __init__(self, in_channels, out_channels, kernel_size):
@@ -292,6 +298,19 @@ class ConvReLU2D(ConvActivation):
                                          initialization=KaimingNormalWeightsZeroBias())
 
 
+class ValidConvReLU2D(ValidConvActivation):
+    """2D Convolutional layer with 'VALID' padding, ReLU and Kaiming normal weight initialization."""
+    def __init__(self, in_channels, out_channels, kernel_size):
+        super().__init__(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            dim=2,
+            activation='ReLU',
+            initialization=KaimingNormalWeightsZeroBias()
+        )
+
+
 class ConvReLU3D(ConvActivation):
     """3D Convolutional layer with 'SAME' padding, ReLU and Kaiming normal weight initialization."""
     def __init__(self, in_channels, out_channels, kernel_size):
@@ -301,6 +320,19 @@ class ConvReLU3D(ConvActivation):
                                          dim=3,
                                          activation='ReLU',
                                          initialization=KaimingNormalWeightsZeroBias())
+
+
+class ValidConvReLU3D(ValidConvActivation):
+    """3D Convolutional layer with 'VALID' padding, ReLU and Kaiming normal weight initialization."""
+    def __init__(self, in_channels, out_channels, kernel_size):
+        super().__init__(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            dim=3,
+            activation='ReLU',
+            initialization=KaimingNormalWeightsZeroBias()
+        )
 
 
 class Conv2D(ConvActivation):
@@ -387,6 +419,23 @@ class BNReLUConv2D(_BNReLUSomeConv, ConvActivation):
         self.batchnorm = nn.BatchNorm2d(in_channels)
 
 
+class ValidBNReLUConv2D(_BNReLUSomeConv, ValidConvActivation):
+    """
+    2D BN-ReLU-Conv layer with 'VALID' padding and He weight initialization.
+    """
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1):
+        super().__init__(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            dim=2,
+            stride=stride,
+            activation=nn.ReLU(inplace=True),
+            initialization=KaimingNormalWeightsZeroBias(0)
+        )
+        self.batchnorm = nn.BatchNorm2d(in_channels)
+
+
 class BNReLUDilatedConv2D(_BNReLUSomeConv,ConvActivation):
     """
     2D dilated convolutional layer with 'SAME' padding, Batch norm,  Relu and He
@@ -415,6 +464,23 @@ class BNReLUConv3D(_BNReLUSomeConv, ConvActivation):
                                            stride=stride,
                                            activation=nn.ReLU(inplace=True),
                                            initialization=KaimingNormalWeightsZeroBias(0))
+        self.batchnorm = nn.BatchNorm3d(in_channels)
+
+
+class ValidBNReLUConv3D(_BNReLUSomeConv, ValidConvActivation):
+    """
+    3D BN-ReLU-Conv layer with 'Valid' padding and He weight initialization.
+    """
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1):
+        super().__init__(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            dim=3,
+            stride=stride,
+            activation=nn.ReLU(inplace=True),
+            initialization=KaimingNormalWeightsZeroBias(0)
+        )
         self.batchnorm = nn.BatchNorm3d(in_channels)
 
 
